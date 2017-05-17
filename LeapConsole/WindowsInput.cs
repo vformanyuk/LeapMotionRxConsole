@@ -13,6 +13,8 @@ namespace LeapConsole
         // VK_UP    (0x26)
         // VK_DOWN  (0x28)
         // VK_RETURN (0x0D)
+        // VK_DELETE (0x2E)
+
 
         // Virtual keys: https://msdn.microsoft.com/ru-ru/library/windows/desktop/dd375731(v=vs.85).aspx
         // INPUT struct: https://msdn.microsoft.com/ru-ru/library/windows/desktop/ms646270(v=vs.85).aspx
@@ -244,6 +246,25 @@ namespace LeapConsole
                 }
             };
 
+        private static readonly INPUT[] _tab = new INPUT[1]
+            {
+                new INPUT()
+                {
+                    type = 1,
+                    u = new InputBatch()
+                    {
+                        Keyboard = new KEYBDINPUT()
+                        {
+                            wVk = 0x09,
+                            wScan = 0,
+                            dwFlags = 0x0,
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo()
+                        }
+                    }
+                }
+            };
+
         private static readonly INPUT[] _right = new INPUT[1]
             {
                 new INPUT()
@@ -334,6 +355,39 @@ namespace LeapConsole
                     }
                 }
             };
+        private static readonly INPUT[] _del = new INPUT[2]
+            {
+                new INPUT()
+                {
+                    type = 1,
+                    u = new InputBatch()
+                    {
+                        Keyboard = new KEYBDINPUT()
+                        {
+                            wVk = 0x2E,
+                            wScan = 0,
+                            dwFlags = 0x00,
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo()
+                        }
+                    }
+                },
+                new INPUT()
+                {
+                    type = 1,
+                    u = new InputBatch()
+                    {
+                        Keyboard = new KEYBDINPUT()
+                        {
+                            wVk = 0x2E,
+                            wScan = 0,
+                            dwFlags = 0x02,
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo()
+                        }
+                    }
+                }
+            };
 
         public static void SwitchDesktops()
         {
@@ -381,6 +435,16 @@ namespace LeapConsole
         public static void Down()
         {
             WindowsInput.SendInput((uint)_down.Length, _down, Marshal.SizeOf<INPUT>());
+        }
+
+        public static void Tab()
+        {
+            WindowsInput.SendInput((uint)_tab.Length, _tab, Marshal.SizeOf<INPUT>());
+        }
+
+        public static void Del()
+        {
+            WindowsInput.SendInput((uint)_del.Length, _del, Marshal.SizeOf<INPUT>());
         }
 
         public static void Enter()

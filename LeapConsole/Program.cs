@@ -10,15 +10,21 @@ namespace LeapConsole
 {
     class Program
     {
-        private const double CommandSensetivity = 350;
+        private const double CommandSensetivity = 350; // mm/sec2
         private const double SelectionHorizontalSensitivity = 75;
-        private const double SelectionVerticalSensitivity = 50;
+        private const double SelectionVerticalSensitivity = 30;
 
-        private const double CommandAngleSensetivity = 1;
+        private const double CommandAngleSensetivity = 1; // rad
         private const double SelectionAngleSensetivity = 1.35;
 
-        private static readonly TimeSpan BufferingWindow = TimeSpan.FromSeconds(1.35);
-        private static readonly TimeSpan SamplingWindow = TimeSpan.FromMilliseconds(150);
+        private const double PalmRotationSensetivity = 0.25;
+        private const double PalmRotationThreshold = 0.65;
+
+        private const double PalGrabSensetivity = 0.35;
+        private const double PalGrabThreshold = 0.98;
+
+        private static readonly TimeSpan BufferingWindow = TimeSpan.FromMilliseconds(750);
+        private static readonly TimeSpan SamplingWindow = TimeSpan.FromMilliseconds(200);
 
         /// <summary>
         /// "Hot" observable that will emit frames as soon as frames stream starts
@@ -32,6 +38,9 @@ namespace LeapConsole
         private static Subject<Mode> _modeSwitchSubject = new Subject<Mode>();
 
         private static bool _switchingMode = false;
+
+        private static bool _tabReactionStoped = false;
+        private static bool _delReactionStoped = false;
 
         private static readonly object SyncKey = new object();
 
@@ -115,13 +124,50 @@ namespace LeapConsole
             {
                 var hand = f.Hands[0];
                 var avgAngl = hand.Fingers.Average(fi => fi.Direction.AngleTo(hand.Direction));
-                return avgAngl <= SelectionAngleSensetivity &&
+                var palmRotation = Math.Abs(hand.Rotation.z);
+                return avgAngl <= SelectionAngleSensetivity && palmRotation < PalmRotationSensetivity &&
                        (Math.Abs(hand.PalmVelocity.y) >= SelectionVerticalSensitivity ||
                         Math.Abs(hand.PalmVelocity.x) >= SelectionHorizontalSensitivity);
             })
             .Sample(SamplingWindow)
             .Select(f => new TotalVelocity(f.Hands[0].PalmVelocity.x, f.Hands[0].PalmVelocity.y))
             .Subscribe(new PalmMoveObserver()));
+
+            observers.Add(_leapObservable
+            .EnsureOneHande()
+            .Where(f =>
+            {
+                var rotation = Math.Abs(f.Hands[0].Rotation.z);
+                if (_tabReactionStoped && rotation < PalmRotationSensetivity)
+                {
+                    // lets react on palm rotations (tab hits) again.
+                    _tabReactionStoped = false;
+                }
+                return rotation > PalmRotationThreshold && !_tabReactionStoped;
+            })
+            .Subscribe(r =>
+            {
+                // stop reacting on next to avoid multiple tab "hits"
+                _tabReactionStoped = true;
+                WindowsInput.Tab();
+            }));
+
+            observers.Add(_leapObservable
+            .EnsureOneHande()
+            .Where(f =>
+            {
+                var grab = f.Hands[0].GrabStrength;
+                if (_delReactionStoped && grab < PalGrabSensetivity)
+                {
+                    _delReactionStoped = false;
+                }
+                return grab > PalGrabThreshold && !_delReactionStoped;
+            })
+            .Subscribe(g =>
+            {
+                _delReactionStoped = true;
+                WindowsInput.Del();
+            }));
         }
     }
 }

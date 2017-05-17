@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive.Subjects;
-using System.Threading;
 
 namespace LeapConsole.Observers
 {
@@ -66,6 +65,8 @@ namespace LeapConsole.Observers
                 {
                     // Win + D
                     WindowsInput.MinimizeAll();
+                    // reset all observers
+                    _modeSwitcher.OnNext(Mode.Command);
                 }
                 else
                 {
