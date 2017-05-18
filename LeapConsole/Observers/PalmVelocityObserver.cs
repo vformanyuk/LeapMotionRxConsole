@@ -39,8 +39,6 @@ namespace LeapConsole.Observers
             var absYVelocity = Math.Abs(value.VerticalVelocity);
             var absZVelocity = Math.Abs(value.ZVelocity);
 
-            Console.WriteLine($"Z velocity {value.ZVelocity}");
-
             // user putting hand back to keyboard or mouse
             if (absZVelocity > absXVelocity && absZVelocity > absYVelocity)
             {
