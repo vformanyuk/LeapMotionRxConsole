@@ -2,7 +2,7 @@
 
 namespace LeapConsole.Observers
 {
-    public class PalmMoveObserver : IObserver<TotalVelocity>
+    public class PalmMoveObserver : IObserver<VelocityInfo>
     {
         private const int ConfidenceThreshold = 115;
 
@@ -21,7 +21,7 @@ namespace LeapConsole.Observers
             throw new NotImplementedException();
         }
 
-        public void OnNext(TotalVelocity value)
+        public void OnNext(VelocityInfo value)
         {
             if (value.HorizontalVelocity == 0 && value.VerticalVelocity == 0) return;
             if (_isCompleted) return;

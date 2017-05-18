@@ -4,7 +4,5 @@
     {
         Command,
         Selection,
-        Grab,
-        GrabRelease
     }
 }

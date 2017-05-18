@@ -1,14 +1,16 @@
 ﻿namespace LeapConsole
 {
-    public struct TotalVelocity
+    public struct VelocityInfo
     {
         public float HorizontalVelocity { get; }
         public float VerticalVelocity { get; }
+        public float ZVelocity { get; }
 
-        public TotalVelocity(float horizontal, float vertical)
+        public VelocityInfo(float totalHorizontal, float totalVertical, float totalZ)
         {
-            HorizontalVelocity = horizontal;
-            VerticalVelocity = vertical;
+            HorizontalVelocity = totalHorizontal;
+            VerticalVelocity = totalVertical;
+            ZVelocity = totalZ;
         }
 
         public override string ToString()

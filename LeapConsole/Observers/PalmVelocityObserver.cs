@@ -3,9 +3,9 @@ using System.Reactive.Subjects;
 
 namespace LeapConsole.Observers
 {
-    public class PalmVelocityObserver : IObserver<TotalVelocity>
+    public class PalmVelocityObserver : IObserver<VelocityInfo>
     {
-        private const int ConfidenceThreshold = 1750;
+        private const int ConfidenceThreshold = 1550;
 
         private readonly ISubject<Mode> _modeSwitcher;
 
@@ -30,25 +30,36 @@ namespace LeapConsole.Observers
             throw new NotImplementedException();
         }
 
-        public void OnNext(TotalVelocity value)
+        public void OnNext(VelocityInfo value)
         {
             if (value.HorizontalVelocity == 0 && value.VerticalVelocity == 0) return;
             if (_isCompleted) return;
 
+            var absXVelocity = Math.Abs(value.HorizontalVelocity);
+            var absYVelocity = Math.Abs(value.VerticalVelocity);
+            var absZVelocity = Math.Abs(value.ZVelocity);
+
+            Console.WriteLine($"Z velocity {value.ZVelocity}");
+
+            // user putting hand back to keyboard or mouse
+            if (absZVelocity > absXVelocity && absZVelocity > absYVelocity)
+            {
+#if DEBUG
+                Console.WriteLine($"Z velocity {value.ZVelocity}");
+#endif
+                return;
+            }
+
             // horizontal motion
-            if (Math.Abs(value.HorizontalVelocity) > Math.Abs(value.VerticalVelocity))
+            if (absXVelocity > absYVelocity)
             {
 #if DEBUG
                 Console.WriteLine($"Horizontal velocity {value.HorizontalVelocity}");
 #endif
-
                 // uncertain motion
-                if (Math.Abs(value.HorizontalVelocity) < ConfidenceThreshold) return;
+                if (absXVelocity < ConfidenceThreshold) return;
 
                 WindowsInput.ShowSwitchApplications();
-
-                //if (value.HorizontalVelocity < 0) //left
-                //else //right
                 _modeSwitcher.OnNext(Mode.Selection);
             }
             // vertical motion
@@ -57,9 +68,8 @@ namespace LeapConsole.Observers
 #if DEBUG
                 Console.WriteLine($"Vertical velocity {value.VerticalVelocity}");
 #endif
-
                 // uncertain motion
-                if (Math.Abs(value.VerticalVelocity) < ConfidenceThreshold) return;
+                if (absYVelocity < ConfidenceThreshold) return;
 
                 if (value.VerticalVelocity < 0) // towards controller
                 {
